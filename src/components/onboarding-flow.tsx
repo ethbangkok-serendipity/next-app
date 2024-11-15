@@ -4,7 +4,7 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
-import { ArrowLeft, Glasses, Globe2, Twitter } from 'lucide-react'
+import { ArrowLeft, Glasses, Globe2, Twitter , } from 'lucide-react'
 
 export default function Onboarding() {
   const [currentStep, setCurrentStep] = useState(0)
@@ -89,7 +89,7 @@ export default function Onboarding() {
           <Button
             variant="ghost"
             size="icon"
-            className="absolute top-4 left-4 text-gray-400 hover:text-white"
+            className="absolute top-4 left-4 text-gray-400 hover:bg-slate-700"
             onClick={handleBack}
           >
             <ArrowLeft className="h-6 w-6" />
@@ -119,17 +119,7 @@ export default function Onboarding() {
 
           {currentStep === 0 && (
             <div className="flex justify-center py-4">
-              <svg
-                className="w-32 h-32 text-[#40e0d0]"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1"
-              >
-                <circle cx="12" cy="12" r="10" />
-                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10" />
-                <path d="M12 8v8M8 12h8" />
-              </svg>
+              
             </div>
           )}
 
