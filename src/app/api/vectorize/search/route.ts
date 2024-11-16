@@ -1,5 +1,6 @@
 import DB from "@/app/lib/db"
 import { COLLECTION_NAME, milvus } from "@/app/lib/milvus"
+import { SearchReq, SearchSimpleReq } from "@zilliz/milvus2-sdk-node"
 
 export async function POST(request: Request) {
   const res = await request.json()
@@ -17,12 +18,16 @@ export async function POST(request: Request) {
   }
 
   try {
-    const result = await milvus.query({
+    const result = await milvus.search({
       collection_name: COLLECTION_NAME,
-      expr: `vector >= ${vectorization}`,
-      output_fields: ["vector", "name"],
-      limit: 10,
-    })
+      anns_field: "vector", // Field in schema storing vectors
+      vector: vectorization,
+      output_fields: ["name"], // Fields to include in results
+      limit: 10, // Limit for the number of results
+      topk: 10,
+      params: { nprobe: 10 }, // Additional search params
+      metric_type: "COSINE", // Distance metric: "L2", "IP", or "COSINE"
+    } as SearchSimpleReq)
 
     console.log(
       `Username: ${username} extraction got queried in the vector db\n${JSON.stringify(
@@ -32,12 +37,7 @@ export async function POST(request: Request) {
       )}`
     )
 
-    const db = await DB.getInstance()
-
-    db.data.profileExtractionToVector[username] = vectorization
-    await db.write()
-
-    return Response.json(vectorization)
+    return Response.json(result)
   } catch (error: any) {
     console.error(`Error inserting profile into vector db: ${error?.message}`)
 

@@ -1,6 +1,7 @@
 import DB from "@/app/lib/db"
 import axios from "axios"
 import { createProfileExtraction } from "./extract"
+import { embedder } from "@/app/lib/embedder"
 
 export async function POST(request: Request) {
   const res = await request.json()
@@ -28,22 +29,42 @@ export async function POST(request: Request) {
     await db.write()
 
     const url = new URL(request.url)
-    const response = await axios.post(
+    const vector = await embedder.embed(JSON.stringify(extraction))
+
+    const responseSearch = await axios.post(
+      `${url.protocol}//${url.host}/api/vectorize/search`,
+      {
+        username,
+        vectorization: vector.values,
+      }
+    )
+
+    if (responseSearch.status !== 200) {
+      throw new Error(
+        `Error calling vectorize/insert API: ${responseSearch.statusText} ${responseSearch.status}`
+      )
+    }
+
+    const responseInsert = await axios.post(
       `${url.protocol}//${url.host}/api/vectorize/insert`,
       {
         username,
         extraction,
       }
     )
-    if (response.status !== 200) {
+    if (responseInsert.status !== 200) {
       throw new Error(
-        `Error calling vectorize/insert API: ${response.statusText} ${response.status}`
+        `Error calling vectorize/insert API: ${responseInsert.statusText} ${responseInsert.status}`
       )
     }
 
-    const vectorization = response.data
+    const vectorization = responseInsert.data
 
-    return Response.json({ extraction, vectorization })
+    return Response.json({
+      extraction,
+      vectorizationResult: vectorization.vectorizationResult,
+      results: responseSearch.data?.results.filter((r: any) => r.name !== username),
+    })
   } catch (error: any) {
     console.error(`Error creating profile extraction: ${error?.message}`)
 

@@ -4,7 +4,7 @@ import { OutputFixingParser } from "langchain/output_parsers"
 import promptTemplate from "./prompt"
 
 const llm = new VertexAI({
-  model: "gemini-1.5-pro-001",
+  model: "gemini-1.5-pro-002",
   temperature: 1.0,
   maxOutputTokens: 8192,
 })
