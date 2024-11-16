@@ -162,26 +162,40 @@ const { selectWalletOption } = useWalletOptions();
   }
 
   const handleStepAction = async () => {
-    switch (currentStep) {
-      case 0:
-        // Handle wallet connection
-        // Add your wallet connection logic here
-        await selectWalletOption("metamask")
-        handleNext()
-        break
-      case 1:
-        linkSocialAccount("twitter" as any)
-        handleNext()
-        break
-      case 2:
-        if (!hasCirclesAccount) {
-          await createAvatar()
-        } else {
+    setIsLoading(true)
+    try {
+      switch (currentStep) {
+        case 0:
+          // Wait for wallet connection to complete
+          await selectWalletOption("metamask")
+          // Check if wallet is connected before proceeding
+          if (primaryWallet?.address) {
+            handleNext()
+          }
+          break
+        case 1:
+          // Wait for Twitter connection to complete
+          await linkSocialAccount("twitter" as any)
+          // Check if Twitter is linked before proceeding
+          if (isLinked("twitter" as any)) {
+            handleNext()
+          }
+          break
+        case 2:
+          if (!hasCirclesAccount) {
+            await createAvatar()
+            // handleNext() is called inside createAvatar() after success
+          } else {
+            handleNext()
+          }
+          break
+        default:
           handleNext()
-        }
-        break
-      default:
-        handleNext()
+      }
+    } catch (error) {
+      console.log("Error during step action:", error)
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -304,9 +318,9 @@ const { selectWalletOption } = useWalletOptions();
             className="w-full bg-[#40e0d0] hover:bg-[#3bcdc0] text-black font-medium"
             size="lg"
             onClick={handleStepAction}
-            disabled={isLoading}
+            disabled={isLoading || isProcessing}
           >
-            {isLoading ? "Processing..." : currentStepData.buttonText}
+            {isLoading || isProcessing ? "Processing..." : currentStepData.buttonText}
           </Button>
           <div className="w-full">
             <Progress
