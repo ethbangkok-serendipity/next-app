@@ -20,6 +20,7 @@ import { useDynamicContext } from "@/lib/dynamic"
 import { useSocialAccounts } from "@dynamic-labs/sdk-react-core"
 import { SocialIcon } from "@dynamic-labs/iconic"
 import { useWalletOptions } from "@dynamic-labs/sdk-react-core"
+import { errorMonitor } from "events"
 
 export default function Onboarding() {
   const [currentStep, setCurrentStep] = useState(0)
@@ -185,8 +186,7 @@ export default function Onboarding() {
       setHasCirclesAccount(true)
       handleNext()
     } catch (err) {
-      console.log("Failed to create avatar")
-      console.error("Failed to create avatar:", err)
+      console.log("Failed to create avatar: ", err)
     } finally {
       setIsLoading(false)
     }
@@ -199,11 +199,19 @@ export default function Onboarding() {
     try {
       switch (currentStep) {
         case 0:
-          await selectWalletOption("metamask")
+          if(!primaryWallet){
+            await selectWalletOption("metamask")
+          } else {
+            handleNext()
+          }
           // Next step handled by useEffect
           break
         case 1:
-          await linkSocialAccount("twitter" as any)
+          if(!isLinked("twitter" as any)){
+            await linkSocialAccount("twitter" as any)
+          } else {
+            handleNext()
+          }
           // Next step handled by useEffect
           break
         case 2:
@@ -240,162 +248,164 @@ export default function Onboarding() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b bg-black flex items-center justify-center p-4">
-      <Card className="w-full max-w-md bg-[#1a1b23] text-white border-none relative shadow-xl">
-        {currentStep > 0 && (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="absolute top-4 left-4 text-gray-400 hover:bg-slate-700/50 transition-colors"
-            onClick={handleBack}
-          >
-            <ArrowLeft className="h-6 w-6" />
-            <span className="sr-only">Go back</span>
-          </Button>
-        )}
-        <CardHeader className="space-y-4">
-          <div className="flex items-center justify-center gap-2 text-2xl font-bold">
-            <span className="text-yellow-400">SERENDIPITY</span>
-            {currentStepData.icon}
-          </div>
-          <h2 className="text-[#40e0d0] font-semibold text-center text-xl">
-            {currentStepData.title}
-          </h2>
-          <p className="text-gray-300 text-center">
-            {currentStepData.subtitle}
-          </p>
-        </CardHeader>
-
-        <CardContent className="space-y-6">
-          {error && (
-            <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-lg">
-              <p className="text-red-400 text-sm">{error}</p>
-            </div>
-          )}
-
-          {currentStepData.bullets && (
-            <ul className="space-y-3">
-              {currentStepData.bullets.map((bullet, index) => (
-                <li
-                  key={index}
-                  className="flex items-start gap-3 bg-gray-800/30 p-3 rounded-lg"
-                >
-                  <ChevronRight className="w-5 h-5 text-[#40e0d0] flex-shrink-0 mt-0.5" />
-                  <span className="text-gray-300">{bullet}</span>
-                </li>
-              ))}
-            </ul>
-          )}
-
-          {currentStep === 2 && (
-            <div className="space-y-6">
-              <div className="bg-gray-800/50 rounded-lg p-6 space-y-4">
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-lg font-semibold text-[#40e0d0]">
-                    Your Interests
-                  </h3>
-                  <div className="text-yellow-400 flex items-center gap-1">
-                    <Star className="w-4 h-4" />
-                    <span className="text-sm font-mono">
-                      {currentStepData.dataScore}
-                    </span>
-                  </div>
-                </div>
-                <div className="space-y-3">
-                  {interests.map((interest, index) => (
-                    <div key={index} className="bg-gray-700/30 p-3 rounded-lg">
-                      <div className="flex justify-between items-center mb-2">
-                        <span className="text-gray-300">
-                          {interest.category}
-                        </span>
-                        <span className="text-[#40e0d0] font-mono">
-                          {interest.score}%
-                        </span>
-                      </div>
-                      <Progress
-                        value={interest.score}
-                        className="h-1.5 bg-gray-700"
-                      />
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <Button
-                  variant="outline"
-                  className="bg-[#40e0d0]/10 border-[#40e0d0]/30 hover:bg-[#40e0d0]/20 text-[#40e0d0]"
-                  size="lg"
-                  onClick={handleMintTokens}
-                  disabled={isMinting}
-                >
-                  <Coins className="mr-2 h-4 w-4" />
-                  {isMinting ? "Minting..." : "Mint $MM Tokens"}
-                </Button>
-                <Button
-                  className="bg-[#40e0d0] hover:bg-[#3bcdc0] text-black font-medium"
-                  size="lg"
-                  onClick={handleStepAction}
-                  disabled={isLoading}
-                >
-                  {isLoading ? "Processing..." : currentStepData.buttonText}
-                </Button>
-              </div>
-            </div>
-          )}
-
-          {currentStep === 4 && currentStepData.matches && (
-            <div className="space-y-4">
-              {currentStepData.matches.map((match, index) => (
-                <div
-                  key={index}
-                  className="p-4 rounded-lg border border-[#40e0d0]/20 bg-[#40e0d0]/5 hover:bg-[#40e0d0]/10 transition-colors"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-full bg-[#40e0d0]/20 flex items-center justify-center text-[#40e0d0] font-semibold">
-                      {match.avatar}
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex justify-between items-center mb-2">
-                        <span className="font-medium">{match.username}</span>
-                        <span className="text-sm text-[#40e0d0]">
-                          {match.matchScore}
-                        </span>
-                      </div>
-                      <Button
-                        variant="link"
-                        className="text-[#40e0d0] hover:text-[#40e0d0]/80 p-0 h-auto text-sm"
-                      >
-                        DM on Twitter
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-
-        <CardFooter className="flex flex-col gap-4">
-          {currentStep !== 2 && (
+      <div className="w-full h-full fixed inset-0 flex items-center justify-center bg-black">
+        <Card className="w-[360px] min-h-[600px] bg-[#1a1b23] text-white border-none relative shadow-xl flex flex-col">
+          {currentStep > 0 && (
             <Button
-              className="w-full bg-[#40e0d0] hover:bg-[#3bcdc0] text-black font-medium transition-colors"
-              size="lg"
-              onClick={handleStepAction}
-              disabled={isLoading || isProcessing}
+              variant="ghost"
+              size="icon"
+              className="absolute top-4 left-4 text-gray-400 hover:bg-slate-700/50 transition-colors"
+              onClick={handleBack}
             >
-              {isLoading || isProcessing
-                ? "Processing..."
-                : currentStepData.buttonText}
+              <ArrowLeft className="h-6 w-6" />
+              <span className="sr-only">Go back</span>
             </Button>
           )}
-          <div className="w-full">
-            <Progress
-              value={currentStepData.progress}
-              className="h-2 bg-gray-700"
-            />
-          </div>
-        </CardFooter>
-      </Card>
+          <CardHeader className="space-y-4">
+            <div className="flex items-center justify-center gap-2 text-xl font-bold">
+              <span className="text-yellow-400">SERENDIPITY</span>
+              {currentStepData.icon}
+            </div>
+            <h2 className="text-[#40e0d0] font-semibold text-center text-lg">
+              {currentStepData.title}
+            </h2>
+            <p className="text-gray-300 text-center text-sm">
+              {currentStepData.subtitle}
+            </p>
+          </CardHeader>
+
+          <CardContent className="space-y-6 flex-grow">
+            {error && (
+              <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+                <p className="text-red-400 text-sm">{error}</p>
+              </div>
+            )}
+
+            {currentStepData.bullets && (
+              <ul className="space-y-2">
+                {currentStepData.bullets.map((bullet, index) => (
+                  <li
+                    key={index}
+                    className="flex items-start gap-2 bg-gray-800/30 p-3 rounded-lg"
+                  >
+                    <ChevronRight className="w-4 h-4 text-[#40e0d0] flex-shrink-0 mt-0.5" />
+                    <span className="text-gray-300 text-sm">{bullet}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            {currentStep === 2 && (
+              <div className="space-y-4">
+                <div className="bg-gray-800/50 rounded-lg p-4 space-y-3">
+                  <div className="flex justify-between items-center mb-2">
+                    <h3 className="text-base font-semibold text-[#40e0d0]">
+                      Your Interests
+                    </h3>
+                    <div className="text-yellow-400 flex items-center gap-1">
+                      <Star className="w-4 h-4" />
+                      <span className="text-xs font-mono">
+                        {currentStepData.dataScore}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    {interests.map((interest, index) => (
+                      <div key={index} className="bg-gray-700/30 p-2 rounded-lg">
+                        <div className="flex justify-between items-center mb-1">
+                          <span className="text-gray-300 text-sm">
+                            {interest.category}
+                          </span>
+                          <span className="text-[#40e0d0] font-mono text-xs">
+                            {interest.score}%
+                          </span>
+                        </div>
+                        <Progress
+                          value={interest.score}
+                          className="h-1.5 bg-gray-700"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="grid grid-rows-2 gap-3">
+                  <Button
+                    variant="outline"
+                    className="bg-[#40e0d0]/10 border-[#40e0d0]/30 hover:bg-[#40e0d0]/20 text-[#40e0d0]"
+                    size="default"
+                    onClick={handleMintTokens}
+                    disabled={isMinting}
+                  >
+                    <Coins className="mr-2 h-4 w-4" />
+                    {isMinting ? "Minting..." : "Mint $MM Tokens"}
+                  </Button>
+                  <Button
+                    className="bg-[#40e0d0] hover:bg-[#3bcdc0] text-black font-medium"
+                    size="default"
+                    onClick={handleStepAction}
+                    disabled={isLoading}
+                  >
+                    {isLoading ? "Processing..." : currentStepData.buttonText}
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {currentStep === 4 && currentStepData.matches && (
+              <div className="space-y-3">
+                {currentStepData.matches.map((match, index) => (
+                  <div
+                    key={index}
+                    className="p-3 rounded-lg border border-[#40e0d0]/20 bg-[#40e0d0]/5 hover:bg-[#40e0d0]/10 transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-[#40e0d0]/20 flex items-center justify-center text-[#40e0d0] font-semibold text-sm">
+                        {match.avatar}
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex justify-between items-center mb-1">
+                          <span className="font-medium text-sm">{match.username}</span>
+                          <span className="text-xs text-[#40e0d0]">
+                            {match.matchScore}
+                          </span>
+                        </div>
+                        <Button
+                          variant="link"
+                          className="text-[#40e0d0] hover:text-[#40e0d0]/80 p-0 h-auto text-xs"
+                        >
+                          DM on Twitter
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+
+          <CardFooter className="flex flex-col gap-3 mt-auto">
+            {currentStep !== 2 && (
+              <Button
+                className="w-full bg-[#40e0d0] hover:bg-[#3bcdc0] text-black font-medium transition-colors"
+                size="default"
+                onClick={handleStepAction}
+                disabled={isLoading || isProcessing}
+              >
+                {isLoading || isProcessing
+                  ? "Processing..."
+                  : currentStepData.buttonText}
+              </Button>
+            )}
+            <div className="w-full">
+              <Progress
+                value={currentStepData.progress}
+                className="h-1.5 bg-gray-700"
+              />
+            </div>
+          </CardFooter>
+        </Card>
+      </div>
     </div>
   )
 }

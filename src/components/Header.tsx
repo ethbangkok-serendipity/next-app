@@ -5,6 +5,7 @@ import { useAccount } from "wagmi"
 // import { ConnectButton } from "@rainbow-me/rainbowkit"
 import { DynamicWidget } from "@/lib/dynamic"
 import { useDynamicContext } from "@/lib/dynamic"
+import { Glasses } from "lucide-react"
 
 const Header = () => {
   const pathname = usePathname()
@@ -15,7 +16,7 @@ const Header = () => {
           href="/"
           className="text-xl font-bold text-emerald-400"
         >
-          S
+          <Glasses className="w-6 h-6"/>
         </Link>
         
         <div className="flex items-center gap-6">
