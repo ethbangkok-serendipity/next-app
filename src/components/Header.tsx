@@ -2,12 +2,15 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useAccount } from "wagmi"
-import { ConnectButton } from "@rainbow-me/rainbowkit"
+// import { ConnectButton } from "@rainbow-me/rainbowkit"
+import { DynamicWidget } from "@/lib/dynamic"
+import { useDynamicContext } from "@/lib/dynamic"
 
 const Header = () => {
   const pathname = usePathname()
   const { address } = useAccount()
-
+  const { user } = useDynamicContext()
+  console.log(user)
   return (
     <header className="fixed top-0 w-full max-w-sm bg-black z-50">
       <div className="px-6 py-4 flex flex-row items-center justify-between">
@@ -39,12 +42,13 @@ const Header = () => {
           >
             My Profile
           </Link>
-          <ConnectButton
+          {/* <ConnectButton
             showBalance={false}
             accountStatus="address"
             label="Connect"
             chainStatus="none"
-          />
+          /> */}
+          <DynamicWidget />
         </div>
       </div>
     </header>

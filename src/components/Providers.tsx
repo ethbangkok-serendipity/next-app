@@ -1,31 +1,31 @@
-"use client";
+"use client"
 
-import { ReactNode } from "react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { WagmiProvider } from "wagmi";
-import { getDefaultConfig, RainbowKitProvider } from "@rainbow-me/rainbowkit";
-import { sepolia, baseSepolia, optimismSepolia} from "wagmi/chains";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
+import { type ReactNode } from "react"
+import { WagmiProvider } from "wagmi"
 
-const queryClient = new QueryClient();
+import { config } from "@/lib/wagmi"
+import {
+  DynamicContextProvider,
+  EthereumWalletConnectors,
+  DynamicWagmiConnector,
+} from "@/lib/dynamic"
 
-const config = getDefaultConfig({
-  appName: 'Solidity Next.js Starter',
-  projectId: process.env.NEXT_PUBLIC_RAINBOWKIT_PROJECT_ID ?? "",
-  chains: [baseSepolia, optimismSepolia, sepolia],
-  ssr: true,
-});
+const queryClient = new QueryClient()
 
-const Providers = ({ children }: { children: ReactNode }) => (
-  <WagmiProvider config={config}>
-    <QueryClientProvider client={queryClient}>
-      <RainbowKitProvider
-      appInfo={{
-        appName: 'Seredipity',
-        learnMoreUrl: 'https://github.com/ethbangkok-serendipity/serendipity',
+export function Providers(props: { children: ReactNode }) {
+  return (
+    <DynamicContextProvider
+      settings={{
+        environmentId: "181a95d1-1081-4c0c-8c96-431e10cd86fa",
+        walletConnectors: [EthereumWalletConnectors],
       }}
-      >{children}</RainbowKitProvider>
-    </QueryClientProvider>
-  </WagmiProvider>
-);
-
-export { Providers };
+    >
+      <WagmiProvider config={config}>
+        <QueryClientProvider client={queryClient}>
+          <DynamicWagmiConnector>{props.children}</DynamicWagmiConnector>
+        </QueryClientProvider>
+      </WagmiProvider>
+    </DynamicContextProvider>
+  )
+}
