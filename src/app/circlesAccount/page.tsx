@@ -50,6 +50,7 @@ const Home = () => {
   }
 
   async function createAvatar(inviterAddress: string) {
+    console.log("Creating Avatar")
     if (!sdk) {
       setError("SDK not initialized");
       return;
