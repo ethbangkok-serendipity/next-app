@@ -1,11 +1,9 @@
 import { COLLECTION_NAME, milvus } from "@/app/lib/milvus"
-import { embedder } from "@/app/lib/embedder"
 
-const insertIntoVectorDB = async (data: any) => {
-  const vector = await embedder.embed(JSON.stringify(data))
-
+const insertIntoVectorDB = async (vector: any, name: string) => {
   const insertData = {
     vector: vector.values,
+    name
   }
 
   const result = await milvus.insert({

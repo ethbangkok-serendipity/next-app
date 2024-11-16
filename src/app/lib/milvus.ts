@@ -42,8 +42,8 @@ class Milvus {
   // Initialize the Milvus client
   public async init() {
     // URI is required to connect to Milvus, TOKEN is optional
-    if (!process.env.URI) {
-      throw new Error("URI is required, please check your .env file.")
+    if (!process.env.ZILLIZ_URL) {
+      throw new Error("ZILLIZ_URL is required, please check your .env file.")
     }
 
     try {
@@ -115,71 +115,71 @@ class Milvus {
   }
 
   // Insert data in batches, for example, 1000 data, insert 100 each time
-  public async batchInsert(
-    texts: { [key in CSV_KEYS]: string }[],
-    startIndex: number
-  ): Promise<MutationResult | undefined> {
-    try {
-      // Total number of texts to be inserted
-      const total = texts.length
-      // Calculate the end index for the current batch
-      const endIndex = startIndex + this._MAX_INSERT_COUNT
-      // Slice the texts array to get the current batch
-      const insertTexts = texts.slice(startIndex, endIndex)
-      // Set the inserting flag to true
-      this._is_inserting = true
+  // public async batchInsert(
+  //   texts: { [key in CSV_KEYS]: string }[],
+  //   startIndex: number
+  // ): Promise<MutationResult | undefined> {
+  //   try {
+  //     // Total number of texts to be inserted
+  //     const total = texts.length
+  //     // Calculate the end index for the current batch
+  //     const endIndex = startIndex + this._MAX_INSERT_COUNT
+  //     // Slice the texts array to get the current batch
+  //     const insertTexts = texts.slice(startIndex, endIndex)
+  //     // Set the inserting flag to true
+  //     this._is_inserting = true
 
-      // If it's the first batch, reset the progress
-      if (startIndex === 0) {
-        this._insert_progress = 0
-      }
-      // Array to hold the data to be inserted
-      const insertDatas = []
-      for (let i = 0; i < insertTexts.length; i++) {
-        const row = insertTexts[i] as any
-        // Embed the question into a vector using the all-MiniLM-L6-v2 module
-        const data = await embedder.embed(row[CSV_KEYS.QUESTION])
+  //     // If it's the first batch, reset the progress
+  //     if (startIndex === 0) {
+  //       this._insert_progress = 0
+  //     }
+  //     // Array to hold the data to be inserted
+  //     const insertDatas = []
+  //     for (let i = 0; i < insertTexts.length; i++) {
+  //       const row = insertTexts[i] as any
+  //       // Embed the question into a vector using the all-MiniLM-L6-v2 module
+  //       const data = await embedder.embed(row[CSV_KEYS.QUESTION])
 
-        // Prepare the data to be inserted into the Milvus collection
-        insertDatas.push({
-          vector: data.values,
-          /**
-           * The question and answer are stored as dynamic JSON.
-           * They won't appear in the schema, but can be retrieved during a similarity search.
-           * */
-          question: row[CSV_KEYS.QUESTION],
-          answer: row[CSV_KEYS.ANSWER],
-        })
-      }
+  //       // Prepare the data to be inserted into the Milvus collection
+  //       insertDatas.push({
+  //         vector: data.values,
+  //         /**
+  //          * The question and answer are stored as dynamic JSON.
+  //          * They won't appear in the schema, but can be retrieved during a similarity search.
+  //          * */
+  //         question: row[CSV_KEYS.QUESTION],
+  //         answer: row[CSV_KEYS.ANSWER],
+  //       })
+  //     }
 
-      console.log(
-        `--- ${startIndex} ~ ${endIndex} embedding done, begin to insert into milvus --- `
-      )
-      // Insert the data into Milvus
-      const res = await milvus.insert({
-        fields_data: insertDatas,
-        collection_name: COLLECTION_NAME,
-      })
-      // Update the progress
-      this._insert_progress = Math.floor((endIndex / total) * 100)
+  //     console.log(
+  //       `--- ${startIndex} ~ ${endIndex} embedding done, begin to insert into milvus --- `
+  //     )
+  //     // Insert the data into Milvus
+  //     const res = await milvus.insert({
+  //       fields_data: insertDatas,
+  //       collection_name: COLLECTION_NAME,
+  //     })
+  //     // Update the progress
+  //     this._insert_progress = Math.floor((endIndex / total) * 100)
 
-      console.log(
-        `--- ${startIndex} ~ ${endIndex} insert done, ${this._insert_progress}% now ---`
-      )
-      // If not all data has been inserted, continue inserting
-      if (endIndex < total) {
-        return await this.batchInsert(texts, endIndex + 1)
-      }
-      // If all data has been inserted, update the progress and inserting flag
-      this._insert_progress = 100
-      this._is_inserting = false
-      return res
-    } catch (error) {
-      this._insert_progress = 0
-      this._is_inserting = false
-      this._error_msg = (error as any).message || "Insert failed"
-    }
-  }
+  //     console.log(
+  //       `--- ${startIndex} ~ ${endIndex} insert done, ${this._insert_progress}% now ---`
+  //     )
+  //     // If not all data has been inserted, continue inserting
+  //     if (endIndex < total) {
+  //       return await this.batchInsert(texts, endIndex + 1)
+  //     }
+  //     // If all data has been inserted, update the progress and inserting flag
+  //     this._insert_progress = 100
+  //     this._is_inserting = false
+  //     return res
+  //   } catch (error) {
+  //     this._insert_progress = 0
+  //     this._is_inserting = false
+  //     this._error_msg = (error as any).message || "Insert failed"
+  //   }
+  // }
 
   // Get the progress of the insert operation
   get insertProgress() {
