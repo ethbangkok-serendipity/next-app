@@ -5,10 +5,44 @@ import axios from "axios"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
-import { ArrowLeft, Glasses, Globe2, Twitter } from "lucide-react"
+import { ArrowLeft, Glasses, Globe2, Twitter, Wallet } from 'lucide-react'
+import { CirclesConfig, Sdk } from '@circles-sdk/sdk'
+import { BrowserProviderContractRunner } from "@circles-sdk/adapter-ethers"
+import { useDynamicContext } from '@/lib/dynamic'
+import { useSocialAccounts } from "@dynamic-labs/sdk-react-core";
+import { SocialIcon } from '@dynamic-labs/iconic';
+import { useWalletOptions } from "@dynamic-labs/sdk-react-core";
 
 export default function Onboarding() {
   const [currentStep, setCurrentStep] = useState(0)
+  const { user, primaryWallet } = useDynamicContext()
+  const [sdk, setSdk] = useState<Sdk| null>(null)
+  const [error, setError] = useState(null)
+  const [isLoading, setIsLoading] = useState(false)
+  const [hasCirclesAccount, setHasCirclesAccount] = useState(false)
+
+  const {
+    linkSocialAccount,
+    unlinkSocialAccount,
+    isProcessing,
+    isLinked,
+    getLinkedAccountInformation,
+  } = useSocialAccounts();
+
+const { selectWalletOption } = useWalletOptions();
+
+  // const isProviderLinked = isLinked("twitter" as any);
+  // const connectedAccountInfo = getLinkedAccountInformation("twitter" as any);
+
+  const circlesConfig = {
+    circlesRpcUrl: "https://static.94.138.251.148.clients.your-server.de/rpc/",
+    v1HubAddress: "0x29b9a7fbb8995b2423a71cc17cf9810798f6c543",
+    v2HubAddress: "0x3D61f0A272eC69d65F5CFF097212079aaFDe8267",
+    migrationAddress: "0x28141b6743c8569Ad8B20Ac09046Ba26F9Fb1c90",
+    nameRegistryAddress: "0x8D1BEBbf5b8DFCef0F7E2039e4106A76Cb66f968",
+    profileServiceUrl: "https://static.94.138.251.148.clients.your-server.de/profiles/",
+    baseGroupMintPolicy: "0x79Cbc9C7077dF161b92a745345A6Ade3fC626A60",
+  }
 
   const steps = [
     {
@@ -22,7 +56,7 @@ export default function Onboarding() {
         "Pay for AI services with your data, not your privacy",
       ],
       buttonText: "CONNECT WALLET",
-      icon: <Glasses className="w-6 h-6" />,
+      icon: <Wallet className="w-6 h-6" />
     },
     {
       title: "CONNECT YOUR TWITTER",
@@ -43,8 +77,8 @@ export default function Onboarding() {
         "Review your extracted interests and mint dataDAO tokens proportional to your data's quality & staking your $CRC.",
       progress: 50,
       dataScore: "SIGMA DATA CONFIDENCE SCORE= 2.3",
-      buttonText: "Join dataDAO",
-      icon: <Glasses className="w-6 h-6" />,
+      buttonText: hasCirclesAccount ? "Continue" : "Create Circles Account",
+      icon: <Glasses className="w-6 h-6" />
     },
     {
       title: "FIND YOUR MATCHES",
@@ -68,12 +102,52 @@ export default function Onboarding() {
         { username: "@vitalik", matchScore: "80% interest match" },
         { username: "@vitalik", matchScore: "80% interest match" },
       ],
-      buttonText: "BACK",
-      icon: <Glasses className="w-6 h-6" />,
-    },
+      buttonText: "MEET YOUR MATCHES",
+      icon: <Globe2 className="w-6 h-6" />
+    }
   ]
 
-  const currentStepData = steps[currentStep]
+  async function initCircles() {
+    try {
+      if (!primaryWallet?.address) {
+        console.log("Please connect your wallet first")
+        return
+      }
+
+      const adapter = new BrowserProviderContractRunner()
+      await adapter.init()
+      const newSdk = new Sdk(adapter, circlesConfig)
+      setSdk(newSdk)
+      return newSdk
+    } catch (err) {
+      console.log("Failed to initialize Circles SDK")
+      console.error("Failed to initialize Circles:", err)
+    }
+  }
+
+  async function createAvatar() {
+    setIsLoading(true)
+    setError(null)
+
+    try {
+      const initializedSdk = sdk || await initCircles()
+      if (!initializedSdk) {
+        throw new Error("Failed to initialize Circles SDK")
+      }
+
+      const avatar = await initializedSdk.acceptInvitation("0x0000000000000000000000000000000000000000", {
+        name: "User"
+      })
+      console.log("Avatar created:", avatar.avatarInfo)
+      setHasCirclesAccount(true)
+      handleNext()
+    } catch (err) {
+      console.log("Failed to create avatar")
+      console.error("Failed to create avatar:", err)
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   const handleNext = () => {
     if (currentStep < steps.length - 1) {
@@ -86,6 +160,32 @@ export default function Onboarding() {
       setCurrentStep(currentStep - 1)
     }
   }
+
+  const handleStepAction = async () => {
+    switch (currentStep) {
+      case 0:
+        // Handle wallet connection
+        // Add your wallet connection logic here
+        await selectWalletOption("metamask")
+        handleNext()
+        break
+      case 1:
+        linkSocialAccount("twitter" as any)
+        handleNext()
+        break
+      case 2:
+        if (!hasCirclesAccount) {
+          await createAvatar()
+        } else {
+          handleNext()
+        }
+        break
+      default:
+        handleNext()
+    }
+  }
+
+  const currentStepData = steps[currentStep]
 
   const runBackendPipeline = async () => {
     try {
@@ -141,46 +241,43 @@ export default function Onboarding() {
             </ul>
           )}
 
+          {error && (
+            <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+              <p className="text-red-400 text-sm">{error}</p>
+            </div>
+          )}
+
           {currentStep === 0 && (
-            <div className="flex justify-center py-4"></div>
+            <div className="flex justify-center py-4">
+              <Wallet className="w-24 h-24 text-gray-400" />
+            </div>
           )}
 
           {currentStep === 1 && (
             <div className="flex justify-center py-4">
-              <svg
-                className="w-32 h-32 text-gray-400"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-              >
-                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-6h2v2h-2zm0-8h2v6h-2z" />
-              </svg>
+              <Twitter className="w-24 h-24 text-gray-400" />
             </div>
           )}
 
           {currentStep === 2 && (
-            <>
+            <div className="space-y-4">
               <div className="w-full h-48 bg-gray-700 rounded-lg" />
               <p className="text-center text-sm font-mono">
                 {currentStepData.dataScore}
               </p>
-            </>
-          )}
-
-          {currentStep === 3 && (
-            <div className="flex justify-center py-4">
-              <svg
-                className="w-32 h-32 text-gray-400"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-              >
-                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z" />
-              </svg>
+              {!hasCirclesAccount && (
+                <div className="p-4 bg-[#40e0d0]/10 rounded-lg">
+                  <p className="text-sm text-gray-300 mb-2">
+                    Create your Circles account to start connecting with others.
+                  </p>
+                </div>
+              )}
             </div>
           )}
 
-          {currentStep === 4 && (
+          {currentStep === 3 && currentStepData.matches && (
             <div className="space-y-3">
-              {currentStepData.matches?.map((match, index) => (
+              {currentStepData.matches.map((match, index) => (
                 <div
                   key={index}
                   className="p-4 rounded-lg border border-[#40e0d0]/20 bg-[#40e0d0]/5"
@@ -206,9 +303,10 @@ export default function Onboarding() {
           <Button
             className="w-full bg-[#40e0d0] hover:bg-[#3bcdc0] text-black font-medium"
             size="lg"
-            onClick={currentStep === steps.length - 1 ? handleBack : handleNext}
+            onClick={handleStepAction}
+            disabled={isLoading}
           >
-            {currentStepData.buttonText}
+            {isLoading ? "Processing..." : currentStepData.buttonText}
           </Button>
           <div className="w-full">
             <Progress
