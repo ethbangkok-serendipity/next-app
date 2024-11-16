@@ -5,11 +5,13 @@ export type ProfileExtraction = {
 
 type Data = {
   usernameToProfileExtraction: Record<string, ProfileExtraction>
+  profileExtractionToVector: Record<string, any>
 }
 
 class DB {
   static defaultData: Data = {
     usernameToProfileExtraction: {},
+    profileExtractionToVector: {},
   }
 
   static async getInstance() {
