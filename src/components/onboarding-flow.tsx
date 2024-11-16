@@ -1,15 +1,24 @@
 "use client"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import axios from "axios"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
-import { ArrowLeft, Glasses, Globe2, Twitter, Wallet, Coins, ChevronRight, Star } from 'lucide-react'
-import { CirclesConfig, Sdk } from '@circles-sdk/sdk'
+import {
+  ArrowLeft,
+  Glasses,
+  Globe2,
+  Twitter,
+  Wallet,
+  Coins,
+  ChevronRight,
+  Star,
+} from "lucide-react"
+import { CirclesConfig, Sdk } from "@circles-sdk/sdk"
 import { BrowserProviderContractRunner } from "@circles-sdk/adapter-ethers"
-import { useDynamicContext } from '@/lib/dynamic'
+import { useDynamicContext } from "@/lib/dynamic"
 import { useSocialAccounts } from "@dynamic-labs/sdk-react-core"
-import { SocialIcon } from '@dynamic-labs/iconic'
+import { SocialIcon } from "@dynamic-labs/iconic"
 import { useWalletOptions } from "@dynamic-labs/sdk-react-core"
 
 export default function Onboarding() {
@@ -24,7 +33,7 @@ export default function Onboarding() {
     { category: "Blockchain", score: 85 },
     { category: "AI & Machine Learning", score: 92 },
     { category: "Web3", score: 78 },
-    { category: "DeFi", score: 88 }
+    { category: "DeFi", score: 88 },
   ])
 
   const {
@@ -37,10 +46,25 @@ export default function Onboarding() {
 
   const { selectWalletOption } = useWalletOptions()
 
+  // Add useEffect to handle wallet connection state
+  useEffect(() => {
+    if (currentStep === 0 && primaryWallet?.address) {
+      handleNext()
+    }
+  }, [primaryWallet?.address])
+
+  // Add useEffect to handle Twitter connection state
+  useEffect(() => {
+    if (currentStep === 1 && isLinked("twitter" as any)) {
+      handleNext()
+    }
+  }, [isLinked])
+
   const steps = [
     {
       title: "FIND YOUR MAGICAL CONNECTIONS",
-      subtitle: "Tired of random networking? Discover like-minded peers privately at events.",
+      subtitle:
+        "Tired of random networking? Discover like-minded peers privately at events.",
       progress: 0,
       bullets: [
         "Discover ideal matches based on your Twitter data",
@@ -48,11 +72,12 @@ export default function Onboarding() {
         "Pay for AI services with your data, not your privacy",
       ],
       buttonText: "CONNECT WALLET",
-      icon: <Wallet className="w-6 h-6" />
+      icon: <Wallet className="w-6 h-6" />,
     },
     {
       title: "CONNECT YOUR TWITTER",
-      subtitle: "Link your profile to unlock tailored networking opportunities.",
+      subtitle:
+        "Link your profile to unlock tailored networking opportunities.",
       progress: 25,
       bullets: [
         "Compute privately on your data to extract your Interests",
@@ -64,15 +89,17 @@ export default function Onboarding() {
     },
     {
       title: "MEET YOURSELF",
-      subtitle: "Review your extracted interests and mint dataDAO tokens proportional to your data's quality & staking your $CRC.",
+      subtitle:
+        "Review your extracted interests and mint dataDAO tokens proportional to your data's quality & staking your $CRC.",
       progress: 50,
       dataScore: "SIGMA DATA CONFIDENCE SCORE = 2.3",
       buttonText: hasCirclesAccount ? "Continue" : "Create Circles Account",
-      icon: <Glasses className="w-6 h-6" />
+      icon: <Glasses className="w-6 h-6" />,
     },
     {
       title: "FIND YOUR MATCHES",
-      subtitle: "Compute on dataDAO's data treasury and find the closest matches",
+      subtitle:
+        "Compute on dataDAO's data treasury and find the closest matches",
       progress: 75,
       bullets: [
         "Pay in your dataDAO's tokens to access dataDAO's pool",
@@ -92,8 +119,8 @@ export default function Onboarding() {
         { username: "@aave", matchScore: "70% interest match", avatar: "A" },
       ],
       buttonText: "MEET YOUR MATCHES",
-      icon: <Globe2 className="w-6 h-6" />
-    }
+      icon: <Globe2 className="w-6 h-6" />,
+    },
   ]
 
   const circlesConfig = {
@@ -102,22 +129,23 @@ export default function Onboarding() {
     v2HubAddress: "0x3D61f0A272eC69d65F5CFF097212079aaFDe8267",
     migrationAddress: "0x28141b6743c8569Ad8B20Ac09046Ba26F9Fb1c90",
     nameRegistryAddress: "0x8D1BEBbf5b8DFCef0F7E2039e4106A76Cb66f968",
-    profileServiceUrl: "https://static.94.138.251.148.clients.your-server.de/profiles/",
+    profileServiceUrl:
+      "https://static.94.138.251.148.clients.your-server.de/profiles/",
     baseGroupMintPolicy: "0x79Cbc9C7077dF161b92a745345A6Ade3fC626A60",
   }
 
   const handleMintTokens = async () => {
     setIsMinting(true)
     try {
-      // Add your minting logic here
-      await new Promise(resolve => setTimeout(resolve, 2000)) // Simulated delay
-      // Success notification would go here
+      await new Promise((resolve) => setTimeout(resolve, 2000))
+      // Add your actual minting logic here
     } catch (error) {
       console.log("Failed to mint tokens. Please try again.")
     } finally {
       setIsMinting(false)
     }
   }
+
   async function initCircles() {
     try {
       if (!primaryWallet?.address) {
@@ -133,27 +161,32 @@ export default function Onboarding() {
     } catch (err) {
       console.log("Failed to initialize Circles SDK")
       console.error("Failed to initialize Circles:", err)
+      return null
     }
   }
 
-   async function createAvatar() {
+  async function createAvatar() {
     setIsLoading(true)
     setError(null)
 
     try {
-      const initializedSdk = sdk || await initCircles()
+      const initializedSdk = sdk || (await initCircles())
       if (!initializedSdk) {
         throw new Error("Failed to initialize Circles SDK")
       }
 
-      const avatar = await initializedSdk.acceptInvitation("0x0000000000000000000000000000000000000000", {
-        name: "User"
-      })
+      const avatar = await initializedSdk.acceptInvitation(
+        "0x0000000000000000000000000000000000000000",
+        {
+          name: user?.firstName || "User",
+        }
+      )
       console.log("Avatar created:", avatar.avatarInfo)
       setHasCirclesAccount(true)
       handleNext()
     } catch (err) {
-      console.log("Failed to create avatar", err)
+      console.log("Failed to create avatar")
+      console.error("Failed to create avatar:", err)
     } finally {
       setIsLoading(false)
     }
@@ -161,19 +194,17 @@ export default function Onboarding() {
 
   const handleStepAction = async () => {
     setIsLoading(true)
+    setError(null)
+
     try {
       switch (currentStep) {
         case 0:
           await selectWalletOption("metamask")
-          if (primaryWallet?.address) {
-            handleNext()
-          }
+          // Next step handled by useEffect
           break
         case 1:
           await linkSocialAccount("twitter" as any)
-          if (isLinked("twitter" as any)) {
-            handleNext()
-          }
+          // Next step handled by useEffect
           break
         case 2:
           if (!hasCirclesAccount) {
@@ -187,7 +218,7 @@ export default function Onboarding() {
       }
     } catch (error) {
       console.error("Error during step action:", error)
-      console.log("An error occurred during this step")
+      setError("An error occurred during this step" as any)
     } finally {
       setIsLoading(false)
     }
@@ -195,13 +226,13 @@ export default function Onboarding() {
 
   const handleNext = () => {
     if (currentStep < steps.length - 1) {
-      setCurrentStep(currentStep + 1)
+      setCurrentStep((prevStep) => prevStep + 1)
     }
   }
 
   const handleBack = () => {
     if (currentStep > 0) {
-      setCurrentStep(currentStep - 1)
+      setCurrentStep((prevStep) => prevStep - 1)
     }
   }
 
@@ -235,10 +266,19 @@ export default function Onboarding() {
         </CardHeader>
 
         <CardContent className="space-y-6">
+          {error && (
+            <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-lg">
+              <p className="text-red-400 text-sm">{error}</p>
+            </div>
+          )}
+
           {currentStepData.bullets && (
             <ul className="space-y-3">
               {currentStepData.bullets.map((bullet, index) => (
-                <li key={index} className="flex items-start gap-3 bg-gray-800/30 p-3 rounded-lg">
+                <li
+                  key={index}
+                  className="flex items-start gap-3 bg-gray-800/30 p-3 rounded-lg"
+                >
                   <ChevronRight className="w-5 h-5 text-[#40e0d0] flex-shrink-0 mt-0.5" />
                   <span className="text-gray-300">{bullet}</span>
                 </li>
@@ -246,35 +286,40 @@ export default function Onboarding() {
             </ul>
           )}
 
-          {error && (
-            <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-lg">
-              <p className="text-red-400 text-sm">{error}</p>
-            </div>
-          )}
-
           {currentStep === 2 && (
             <div className="space-y-6">
               <div className="bg-gray-800/50 rounded-lg p-6 space-y-4">
                 <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-lg font-semibold text-[#40e0d0]">Your Interests</h3>
+                  <h3 className="text-lg font-semibold text-[#40e0d0]">
+                    Your Interests
+                  </h3>
                   <div className="text-yellow-400 flex items-center gap-1">
                     <Star className="w-4 h-4" />
-                    <span className="text-sm font-mono">{currentStepData.dataScore}</span>
+                    <span className="text-sm font-mono">
+                      {currentStepData.dataScore}
+                    </span>
                   </div>
                 </div>
                 <div className="space-y-3">
                   {interests.map((interest, index) => (
                     <div key={index} className="bg-gray-700/30 p-3 rounded-lg">
                       <div className="flex justify-between items-center mb-2">
-                        <span className="text-gray-300">{interest.category}</span>
-                        <span className="text-[#40e0d0] font-mono">{interest.score}%</span>
+                        <span className="text-gray-300">
+                          {interest.category}
+                        </span>
+                        <span className="text-[#40e0d0] font-mono">
+                          {interest.score}%
+                        </span>
                       </div>
-                      <Progress value={interest.score} className="h-1.5 bg-gray-700" />
+                      <Progress
+                        value={interest.score}
+                        className="h-1.5 bg-gray-700"
+                      />
                     </div>
                   ))}
                 </div>
               </div>
-              
+
               <div className="grid grid-cols-2 gap-4">
                 <Button
                   variant="outline"
@@ -338,7 +383,9 @@ export default function Onboarding() {
               onClick={handleStepAction}
               disabled={isLoading || isProcessing}
             >
-              {isLoading || isProcessing ? "Processing..." : currentStepData.buttonText}
+              {isLoading || isProcessing
+                ? "Processing..."
+                : currentStepData.buttonText}
             </Button>
           )}
           <div className="w-full">
