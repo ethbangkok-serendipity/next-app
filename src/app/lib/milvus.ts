@@ -8,7 +8,7 @@ import {
 import { embedder } from "./embedder"
 
 // Define constants for the Milvus client
-const DIM = 384 // model Xenova/all-MiniLM-L6-v2 embedding dimension
+const DIM = 1536 // openai model embedding dimension
 export const COLLECTION_NAME = "profile_extraction_semantic_search"
 export const VECTOR_FIELD_NAME = "vector"
 export const METRIC_TYPE = "COSINE"

@@ -17,21 +17,22 @@ export async function POST(request: Request) {
   try {
     const vector = await embedder.embed(JSON.stringify(extraction))
 
-    console.log("vector", vector)
-    console.log('vector.length', vector.values.length)
-
-    const vectorization = await insertIntoVectorDB(vector, username)
+    const vectorizationResult = await insertIntoVectorDB(vector, username)
 
     console.log(
-      `Username: ${username} extraction got inserted into vector db\n${vectorization}`
+      `Username: ${username} extraction got inserted into vector db\n${JSON.stringify(
+        vectorizationResult,
+        null,
+        2
+      )}`
     )
 
     const db = await DB.getInstance()
 
-    db.data.profileExtractionToVector[username] = vectorization
+    db.data.profileExtractionToVector[username] = vector
     await db.write()
 
-    return Response.json(vectorization)
+    return Response.json({ vector, vectorizationResult })
   } catch (error: any) {
     console.error(`Error inserting profile into vector db: ${error?.message}`)
 
