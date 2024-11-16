@@ -9,6 +9,11 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@circles-sdk/adapter-ethers": "^0.14.0",
+    "@circles-sdk/data": "^0.14.0",
+    "@circles-sdk/profiles": "^0.14.0",
+    "@circles-sdk/sdk": "^0.14.0",
+    "@circles-sdk/utils": "^0.14.0",
     "@dynamic-labs/ethereum": "^3.6.3",
     "@dynamic-labs/sdk-react-core": "^3.6.3",
     "@dynamic-labs/wagmi-connector": "^3.6.3",
@@ -29,6 +34,7 @@
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "dotenv": "^16.4.5",
+    "ethers": "^6.13.4",
     "form-data": "^4.0.1",
     "lowdb": "^7.0.1",
     "lucide-react": "^0.460.0",

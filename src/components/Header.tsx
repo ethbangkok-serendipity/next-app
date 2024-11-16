@@ -8,9 +8,6 @@ import { useDynamicContext } from "@/lib/dynamic"
 
 const Header = () => {
   const pathname = usePathname()
-  const { address } = useAccount()
-  const { user } = useDynamicContext()
-  console.log(user)
   return (
     <header className="fixed top-0 w-full max-w-sm bg-black z-50">
       <div className="px-6 py-4 flex flex-row items-center justify-between">
