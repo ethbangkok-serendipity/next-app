@@ -1,11 +1,13 @@
 import { http, createConfig } from "wagmi"
-import { mainnet, sepolia } from "wagmi/chains"
+import { mainnet, sepolia, gnosis, gnosisChiado} from "wagmi/chains"
 
 export const config = createConfig({
-  chains: [mainnet, sepolia],
+  chains: [ gnosis, gnosisChiado, mainnet, sepolia],
   multiInjectedProviderDiscovery: false,
   ssr: true,
   transports: {
+    [gnosis.id]: http(),
+    [gnosisChiado.id]: http(),
     [mainnet.id]: http(),
     [sepolia.id]: http(),
   },
