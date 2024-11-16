@@ -8,7 +8,13 @@ import { useDynamicContext } from '@/lib/dynamic';
 // import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 
-const circlesConfig = {
+const Home = () => {
+  const { user, primaryWallet } = useDynamicContext();
+  const [sdk, setSdk] = useState<Sdk | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const circlesConfig = {
   circlesRpcUrl: "https://static.94.138.251.148.clients.your-server.de/rpc/",
   v1HubAddress: "0x29b9a7fbb8995b2423a71cc17cf9810798f6c543",
   v2HubAddress: "0x3D61f0A272eC69d65F5CFF097212079aaFDe8267",
@@ -18,13 +24,7 @@ const circlesConfig = {
   baseGroupMintPolicy: "0x79Cbc9C7077dF161b92a745345A6Ade3fC626A60",
 };
 
-export const GnosisChainConfig: CirclesConfig = circlesConfig;
-
-const Home = () => {
-  const { user, primaryWallet } = useDynamicContext();
-  const [sdk, setSdk] = useState<Sdk | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const GnosisChainConfig: CirclesConfig = circlesConfig;
 
   useEffect(() => {
     initCircles();
