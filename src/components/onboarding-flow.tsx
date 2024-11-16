@@ -1,25 +1,31 @@
 "use client"
-
 import { useState } from "react"
 import axios from "axios"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
-import { ArrowLeft, Glasses, Globe2, Twitter, Wallet } from 'lucide-react'
+import { ArrowLeft, Glasses, Globe2, Twitter, Wallet, Coins, ChevronRight, Star } from 'lucide-react'
 import { CirclesConfig, Sdk } from '@circles-sdk/sdk'
 import { BrowserProviderContractRunner } from "@circles-sdk/adapter-ethers"
 import { useDynamicContext } from '@/lib/dynamic'
-import { useSocialAccounts } from "@dynamic-labs/sdk-react-core";
-import { SocialIcon } from '@dynamic-labs/iconic';
-import { useWalletOptions } from "@dynamic-labs/sdk-react-core";
+import { useSocialAccounts } from "@dynamic-labs/sdk-react-core"
+import { SocialIcon } from '@dynamic-labs/iconic'
+import { useWalletOptions } from "@dynamic-labs/sdk-react-core"
 
 export default function Onboarding() {
   const [currentStep, setCurrentStep] = useState(0)
   const { user, primaryWallet } = useDynamicContext()
-  const [sdk, setSdk] = useState<Sdk| null>(null)
+  const [sdk, setSdk] = useState<Sdk | null>(null)
   const [error, setError] = useState(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [isMinting, setIsMinting] = useState(false)
   const [hasCirclesAccount, setHasCirclesAccount] = useState(false)
+  const [interests, setInterests] = useState([
+    { category: "Blockchain", score: 85 },
+    { category: "AI & Machine Learning", score: 92 },
+    { category: "Web3", score: 78 },
+    { category: "DeFi", score: 88 }
+  ])
 
   const {
     linkSocialAccount,
@@ -27,28 +33,14 @@ export default function Onboarding() {
     isProcessing,
     isLinked,
     getLinkedAccountInformation,
-  } = useSocialAccounts();
+  } = useSocialAccounts()
 
-const { selectWalletOption } = useWalletOptions();
-
-  // const isProviderLinked = isLinked("twitter" as any);
-  // const connectedAccountInfo = getLinkedAccountInformation("twitter" as any);
-
-  const circlesConfig = {
-    circlesRpcUrl: "https://static.94.138.251.148.clients.your-server.de/rpc/",
-    v1HubAddress: "0x29b9a7fbb8995b2423a71cc17cf9810798f6c543",
-    v2HubAddress: "0x3D61f0A272eC69d65F5CFF097212079aaFDe8267",
-    migrationAddress: "0x28141b6743c8569Ad8B20Ac09046Ba26F9Fb1c90",
-    nameRegistryAddress: "0x8D1BEBbf5b8DFCef0F7E2039e4106A76Cb66f968",
-    profileServiceUrl: "https://static.94.138.251.148.clients.your-server.de/profiles/",
-    baseGroupMintPolicy: "0x79Cbc9C7077dF161b92a745345A6Ade3fC626A60",
-  }
+  const { selectWalletOption } = useWalletOptions()
 
   const steps = [
     {
       title: "FIND YOUR MAGICAL CONNECTIONS",
-      subtitle:
-        "Tired of random networking? Discover like-minded peers privately at events.",
+      subtitle: "Tired of random networking? Discover like-minded peers privately at events.",
       progress: 0,
       bullets: [
         "Discover ideal matches based on your Twitter data",
@@ -60,8 +52,7 @@ const { selectWalletOption } = useWalletOptions();
     },
     {
       title: "CONNECT YOUR TWITTER",
-      subtitle:
-        "Link your profile to unlock tailored networking opportunities.",
+      subtitle: "Link your profile to unlock tailored networking opportunities.",
       progress: 25,
       bullets: [
         "Compute privately on your data to extract your Interests",
@@ -73,17 +64,15 @@ const { selectWalletOption } = useWalletOptions();
     },
     {
       title: "MEET YOURSELF",
-      subtitle:
-        "Review your extracted interests and mint dataDAO tokens proportional to your data's quality & staking your $CRC.",
+      subtitle: "Review your extracted interests and mint dataDAO tokens proportional to your data's quality & staking your $CRC.",
       progress: 50,
-      dataScore: "SIGMA DATA CONFIDENCE SCORE= 2.3",
+      dataScore: "SIGMA DATA CONFIDENCE SCORE = 2.3",
       buttonText: hasCirclesAccount ? "Continue" : "Create Circles Account",
       icon: <Glasses className="w-6 h-6" />
     },
     {
       title: "FIND YOUR MATCHES",
-      subtitle:
-        "Compute on dataDAO's data treasury and find the closest matches",
+      subtitle: "Compute on dataDAO's data treasury and find the closest matches",
       progress: 75,
       bullets: [
         "Pay in your dataDAO's tokens to access dataDAO's pool",
@@ -98,15 +87,37 @@ const { selectWalletOption } = useWalletOptions();
       subtitle: "Connect with peers who share your passions.",
       progress: 100,
       matches: [
-        { username: "@vitalik", matchScore: "80% interest match" },
-        { username: "@vitalik", matchScore: "80% interest match" },
-        { username: "@vitalik", matchScore: "80% interest match" },
+        { username: "@vitalik", matchScore: "80% interest match", avatar: "V" },
+        { username: "@gavin", matchScore: "75% interest match", avatar: "G" },
+        { username: "@aave", matchScore: "70% interest match", avatar: "A" },
       ],
       buttonText: "MEET YOUR MATCHES",
       icon: <Globe2 className="w-6 h-6" />
     }
   ]
 
+  const circlesConfig = {
+    circlesRpcUrl: "https://static.94.138.251.148.clients.your-server.de/rpc/",
+    v1HubAddress: "0x29b9a7fbb8995b2423a71cc17cf9810798f6c543",
+    v2HubAddress: "0x3D61f0A272eC69d65F5CFF097212079aaFDe8267",
+    migrationAddress: "0x28141b6743c8569Ad8B20Ac09046Ba26F9Fb1c90",
+    nameRegistryAddress: "0x8D1BEBbf5b8DFCef0F7E2039e4106A76Cb66f968",
+    profileServiceUrl: "https://static.94.138.251.148.clients.your-server.de/profiles/",
+    baseGroupMintPolicy: "0x79Cbc9C7077dF161b92a745345A6Ade3fC626A60",
+  }
+
+  const handleMintTokens = async () => {
+    setIsMinting(true)
+    try {
+      // Add your minting logic here
+      await new Promise(resolve => setTimeout(resolve, 2000)) // Simulated delay
+      // Success notification would go here
+    } catch (error) {
+      console.log("Failed to mint tokens. Please try again.")
+    } finally {
+      setIsMinting(false)
+    }
+  }
   async function initCircles() {
     try {
       if (!primaryWallet?.address) {
@@ -125,7 +136,7 @@ const { selectWalletOption } = useWalletOptions();
     }
   }
 
-  async function createAvatar() {
+   async function createAvatar() {
     setIsLoading(true)
     setError(null)
 
@@ -142,8 +153,41 @@ const { selectWalletOption } = useWalletOptions();
       setHasCirclesAccount(true)
       handleNext()
     } catch (err) {
-      console.log("Failed to create avatar")
-      console.error("Failed to create avatar:", err)
+      console.log("Failed to create avatar", err)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleStepAction = async () => {
+    setIsLoading(true)
+    try {
+      switch (currentStep) {
+        case 0:
+          await selectWalletOption("metamask")
+          if (primaryWallet?.address) {
+            handleNext()
+          }
+          break
+        case 1:
+          await linkSocialAccount("twitter" as any)
+          if (isLinked("twitter" as any)) {
+            handleNext()
+          }
+          break
+        case 2:
+          if (!hasCirclesAccount) {
+            await createAvatar()
+          } else {
+            handleNext()
+          }
+          break
+        default:
+          handleNext()
+      }
+    } catch (error) {
+      console.error("Error during step action:", error)
+      console.log("An error occurred during this step")
     } finally {
       setIsLoading(false)
     }
@@ -161,167 +205,142 @@ const { selectWalletOption } = useWalletOptions();
     }
   }
 
-  const handleStepAction = async () => {
-    setIsLoading(true)
-    try {
-      switch (currentStep) {
-        case 0:
-          // Wait for wallet connection to complete
-          await selectWalletOption("metamask")
-          // Check if wallet is connected before proceeding
-          if (primaryWallet?.address) {
-            handleNext()
-          }
-          break
-        case 1:
-          // Wait for Twitter connection to complete
-          await linkSocialAccount("twitter" as any)
-          // Check if Twitter is linked before proceeding
-          if (isLinked("twitter" as any)) {
-            handleNext()
-          }
-          break
-        case 2:
-          if (!hasCirclesAccount) {
-            await createAvatar()
-            // handleNext() is called inside createAvatar() after success
-          } else {
-            handleNext()
-          }
-          break
-        default:
-          handleNext()
-      }
-    } catch (error) {
-      console.log("Error during step action:", error)
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
   const currentStepData = steps[currentStep]
 
-  const runBackendPipeline = async () => {
-    try {
-      const url = new URL(window.location.href)
-      const domain = url.hostname
-
-      const response = await axios.post(`${domain}/api/profile_extraction`, {
-        username: "your-username-here",
-        profile: "your-profile-here",
-        // we need to implement the address here as well - is missing on the api
-        address: "your-address-here",
-      })
-      console.log(response.data)
-    } catch (error) {
-      console.error("Error while calling the backend:", error)
-    }
-  }
-
   return (
-    <div className="min-h-screen bg-black flex items-center justify-center p-4">
-      <Card className="w-full max-w-sm bg-[#1a1b23] text-white border-none relative">
+    <div className="min-h-screen bg-gradient-to-b bg-black flex items-center justify-center p-4">
+      <Card className="w-full max-w-md bg-[#1a1b23] text-white border-none relative shadow-xl">
         {currentStep > 0 && (
           <Button
             variant="ghost"
             size="icon"
-            className="absolute top-4 left-4 text-gray-400 hover:bg-slate-700"
+            className="absolute top-4 left-4 text-gray-400 hover:bg-slate-700/50 transition-colors"
             onClick={handleBack}
           >
             <ArrowLeft className="h-6 w-6" />
             <span className="sr-only">Go back</span>
           </Button>
         )}
-        <CardHeader className="space-y-2">
-          <div className="flex items-center justify-center gap-2 text-xl font-semibold text-yellow-400">
+        <CardHeader className="space-y-4">
+          <div className="flex items-center justify-center gap-2 text-2xl font-bold">
+            <span className="text-yellow-400">SERENDIPITY</span>
             {currentStepData.icon}
-            SERENDIPITY
           </div>
-          <h2 className="text-[#40e0d0] font-medium text-center">
+          <h2 className="text-[#40e0d0] font-semibold text-center text-xl">
             {currentStepData.title}
           </h2>
-          <p className="text-sm text-gray-300 text-center">
+          <p className="text-gray-300 text-center">
             {currentStepData.subtitle}
           </p>
         </CardHeader>
+
         <CardContent className="space-y-6">
           {currentStepData.bullets && (
-            <ul className="space-y-2 text-sm text-gray-300">
+            <ul className="space-y-3">
               {currentStepData.bullets.map((bullet, index) => (
-                <li key={index} className="flex items-start gap-2">
-                  <span className="text-[#40e0d0]">•</span> {bullet}
+                <li key={index} className="flex items-start gap-3 bg-gray-800/30 p-3 rounded-lg">
+                  <ChevronRight className="w-5 h-5 text-[#40e0d0] flex-shrink-0 mt-0.5" />
+                  <span className="text-gray-300">{bullet}</span>
                 </li>
               ))}
             </ul>
           )}
 
           {error && (
-            <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+            <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-lg">
               <p className="text-red-400 text-sm">{error}</p>
             </div>
           )}
 
-          {currentStep === 0 && (
-            <div className="flex justify-center py-4">
-              <Wallet className="w-24 h-24 text-gray-400" />
-            </div>
-          )}
-
-          {currentStep === 1 && (
-            <div className="flex justify-center py-4">
-              <Twitter className="w-24 h-24 text-gray-400" />
-            </div>
-          )}
-
           {currentStep === 2 && (
-            <div className="space-y-4">
-              <div className="w-full h-48 bg-gray-700 rounded-lg" />
-              <p className="text-center text-sm font-mono">
-                {currentStepData.dataScore}
-              </p>
-              {!hasCirclesAccount && (
-                <div className="p-4 bg-[#40e0d0]/10 rounded-lg">
-                  <p className="text-sm text-gray-300 mb-2">
-                    Create your Circles account to start connecting with others.
-                  </p>
+            <div className="space-y-6">
+              <div className="bg-gray-800/50 rounded-lg p-6 space-y-4">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-lg font-semibold text-[#40e0d0]">Your Interests</h3>
+                  <div className="text-yellow-400 flex items-center gap-1">
+                    <Star className="w-4 h-4" />
+                    <span className="text-sm font-mono">{currentStepData.dataScore}</span>
+                  </div>
                 </div>
-              )}
+                <div className="space-y-3">
+                  {interests.map((interest, index) => (
+                    <div key={index} className="bg-gray-700/30 p-3 rounded-lg">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-gray-300">{interest.category}</span>
+                        <span className="text-[#40e0d0] font-mono">{interest.score}%</span>
+                      </div>
+                      <Progress value={interest.score} className="h-1.5 bg-gray-700" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <Button
+                  variant="outline"
+                  className="bg-[#40e0d0]/10 border-[#40e0d0]/30 hover:bg-[#40e0d0]/20 text-[#40e0d0]"
+                  size="lg"
+                  onClick={handleMintTokens}
+                  disabled={isMinting}
+                >
+                  <Coins className="mr-2 h-4 w-4" />
+                  {isMinting ? "Minting..." : "Mint $MM Tokens"}
+                </Button>
+                <Button
+                  className="bg-[#40e0d0] hover:bg-[#3bcdc0] text-black font-medium"
+                  size="lg"
+                  onClick={handleStepAction}
+                  disabled={isLoading}
+                >
+                  {isLoading ? "Processing..." : currentStepData.buttonText}
+                </Button>
+              </div>
             </div>
           )}
 
-          {currentStep === 3 && currentStepData.matches && (
-            <div className="space-y-3">
+          {currentStep === 4 && currentStepData.matches && (
+            <div className="space-y-4">
               {currentStepData.matches.map((match, index) => (
                 <div
                   key={index}
-                  className="p-4 rounded-lg border border-[#40e0d0]/20 bg-[#40e0d0]/5"
+                  className="p-4 rounded-lg border border-[#40e0d0]/20 bg-[#40e0d0]/5 hover:bg-[#40e0d0]/10 transition-colors"
                 >
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="font-medium">{match.username}</span>
-                    <span className="text-sm text-gray-300">
-                      {match.matchScore}
-                    </span>
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-full bg-[#40e0d0]/20 flex items-center justify-center text-[#40e0d0] font-semibold">
+                      {match.avatar}
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="font-medium">{match.username}</span>
+                        <span className="text-sm text-[#40e0d0]">
+                          {match.matchScore}
+                        </span>
+                      </div>
+                      <Button
+                        variant="link"
+                        className="text-[#40e0d0] hover:text-[#40e0d0]/80 p-0 h-auto text-sm"
+                      >
+                        DM on Twitter
+                      </Button>
+                    </div>
                   </div>
-                  <Button
-                    variant="link"
-                    className="text-[#40e0d0] hover:text-[#40e0d0]/80 p-0 h-auto text-sm"
-                  >
-                    DM on Twitter App
-                  </Button>
                 </div>
               ))}
             </div>
           )}
         </CardContent>
+
         <CardFooter className="flex flex-col gap-4">
-          <Button
-            className="w-full bg-[#40e0d0] hover:bg-[#3bcdc0] text-black font-medium"
-            size="lg"
-            onClick={handleStepAction}
-            disabled={isLoading || isProcessing}
-          >
-            {isLoading || isProcessing ? "Processing..." : currentStepData.buttonText}
-          </Button>
+          {currentStep !== 2 && (
+            <Button
+              className="w-full bg-[#40e0d0] hover:bg-[#3bcdc0] text-black font-medium transition-colors"
+              size="lg"
+              onClick={handleStepAction}
+              disabled={isLoading || isProcessing}
+            >
+              {isLoading || isProcessing ? "Processing..." : currentStepData.buttonText}
+            </Button>
+          )}
           <div className="w-full">
             <Progress
               value={currentStepData.progress}
