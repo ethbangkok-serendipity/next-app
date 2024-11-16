@@ -19,6 +19,7 @@ const ChatUI = () => {
   const [message, setMessage] = useState("")
   const [messages, setMessages] = useState<Message[]>([])
   const [streamConnected, setStreamConnected] = useState(false)
+  const [isSending, setIsSending] = useState(false)
 
   async function initialize() {
     if (!primaryWallet) return
@@ -57,27 +58,66 @@ const ChatUI = () => {
     }
   }
 
-  async function sendMessage() {
-    if (!user || !receiverAddress || !message.trim()) return
+  function sendAnything() {
+    console.log("anything here")
+  }
+
+  async function sendMessage(e?: React.MouseEvent) {
+    console.log("anything")
+    // Prevent default if called from a form
+    e?.preventDefault()
+
+    if (isSending) {
+      console.log("Already sending a message")
+      return
+    }
+
+    if (!user) {
+      console.error("User not initialized")
+      return
+    }
+
+    if (!receiverAddress) {
+      console.error("No receiver address specified")
+      return
+    }
+
+    if (!message.trim()) {
+      console.error("Message is empty")
+      return
+    }
+
+    console.log("Sending message to:", receiverAddress)
+    console.log("Message content:", message)
+
+    setIsSending(true)
 
     try {
-      await user.chat.send(receiverAddress, {
+      const response = await user.chat.send(receiverAddress, {
         content: message,
       })
 
-      // Add message to local state
-      setMessages((prev) => [
-        ...prev,
-        {
-          content: message,
-          fromDID: `eip155:${primaryWallet}`,
-          timestamp: Date.now(),
-        },
-      ])
+      console.log("Message sent successfully:", response)
 
+      // Add message to local state
+      const newMessage = {
+        content: message,
+        fromDID: `eip155:${primaryWallet}`,
+        timestamp: Date.now(),
+      }
+
+      setMessages((prev) => [...prev, newMessage])
       setMessage("")
     } catch (error) {
       console.error("Error sending message:", error)
+      // If you have a toast component:
+      // toast({
+      //   title: "Error sending message",
+      //   description: "Please try again",
+      //   variant: "destructive",
+      // })
+    } finally {
+      setIsSending(false)
     }
   }
 
@@ -150,7 +190,14 @@ const ChatUI = () => {
                 }
               }}
             />
-            <Button onClick={sendMessage}>Send</Button>
+            <Button
+              onClick={(e) => {
+                sendMessage(e)
+                sendAnything()
+              }}
+            >
+              Send
+            </Button>{" "}
           </div>
         </div>
       </CardContent>

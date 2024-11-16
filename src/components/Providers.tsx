@@ -3,7 +3,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { type ReactNode } from "react"
 import { WagmiProvider } from "wagmi"
-import { ChatWidget, ChatUIProvider, darkChatTheme } from "@pushprotocol/uiweb";
+import { ChatWidget, ChatUIProvider, darkChatTheme } from "@pushprotocol/uiweb"
 
 import { config } from "@/lib/wagmi"
 import {
@@ -26,9 +26,9 @@ export function Providers(props: { children: ReactNode }) {
         <QueryClientProvider client={queryClient}>
           <DynamicWagmiConnector>
             <ChatUIProvider theme={darkChatTheme}>
-            {props.children}
-            </ChatUIProvider >
-            </DynamicWagmiConnector>
+              {props.children}
+            </ChatUIProvider>
+          </DynamicWagmiConnector>
         </QueryClientProvider>
       </WagmiProvider>
     </DynamicContextProvider>
