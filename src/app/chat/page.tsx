@@ -5,6 +5,7 @@ import { useDynamicContext } from "@/lib/dynamic"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { ChatView } from "@pushprotocol/uiweb"
 
 interface Message {
   content: string
@@ -21,6 +22,7 @@ const ChatUI = () => {
   const [streamConnected, setStreamConnected] = useState(false)
   const [isSending, setIsSending] = useState(false)
 
+  console.log("start chatUI")
   async function initialize() {
     if (!primaryWallet) return
 
@@ -137,70 +139,11 @@ const ChatUI = () => {
 
   return (
     <Card className="w-full max-w-2xl mx-auto">
-      <CardHeader>
-        <CardTitle>Push Chat</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <Input
-              placeholder="Enter receiver's wallet address"
-              value={receiverAddress}
-              onChange={(e) => setReceiverAddress(e.target.value)}
-            />
-          </div>
-
-          <div className="h-96 overflow-y-auto border rounded-md p-4 space-y-4">
-            {messages.map((msg, index) => (
-              <div
-                key={index}
-                className={`flex ${
-                  msg.fromDID === `eip155:${primaryWallet}`
-                    ? "justify-end"
-                    : "justify-start"
-                }`}
-              >
-                <div
-                  className={`max-w-[80%] rounded-lg p-3 ${
-                    msg.fromDID === `eip155:${primaryWallet}`
-                      ? "bg-blue-500 text-white"
-                      : "bg-gray-100"
-                  }`}
-                >
-                  <p className="text-sm">
-                    {formatAddress(msg.fromDID.replace("eip155:", ""))}
-                  </p>
-                  <p>{msg.content}</p>
-                  <p className="text-xs mt-1">
-                    {new Date(msg.timestamp).toLocaleTimeString()}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="flex space-x-2">
-            <Input
-              placeholder="Type your message"
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              onKeyPress={(e) => {
-                if (e.key === "Enter") {
-                  sendMessage()
-                }
-              }}
-            />
-            <Button
-              onClick={(e) => {
-                sendMessage(e)
-                sendAnything()
-              }}
-            >
-              Send
-            </Button>{" "}
-          </div>
-        </div>
-      </CardContent>
+      <ChatView
+        chatId="b8e068e02fe12d7136bc2f24408835573f30c6fbf0b65ea26ab4c7055a2c85f1"
+        limit={10}
+        isConnected={true}
+      />
     </Card>
   )
 }
