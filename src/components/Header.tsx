@@ -20,24 +20,14 @@ const Header = () => {
         
         <div className="flex items-center gap-6">
           <Link
-            href="/matches"
+            href="/circlesAccount"
             className={`text-sm ${
               pathname === "/matches" 
                 ? "text-emerald-400 font-semibold" 
                 : "text-gray-100 font-medium"
             }`}
           >
-            Matches
-          </Link>
-          <Link
-            href="/profile"
-            className={`text-sm ${
-              pathname === "/profile" 
-                ? "text-emerald-400 font-semibold" 
-                : "text-gray-100 font-medium"
-            }`}
-          >
-            My Profile
+            Circle
           </Link>
           {/* <ConnectButton
             showBalance={false}
