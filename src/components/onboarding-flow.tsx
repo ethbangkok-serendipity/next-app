@@ -12,51 +12,51 @@ export default function Onboarding() {
   const steps = [
     {
       title: "FIND YOUR MAGICAL CONNECTIONS",
-      subtitle: "Use your data to connect with people that matter to you at ETHGlobal or any conference you go.",
+      subtitle: "Tired of random networking? Discover like-minded peers privately at events.",
       progress: 0,
       bullets: [
-        "Discover ideal collaborators based on your interests",
-        "Secure private matchmaking with 2KTLs & TEE",
-        "Connect via exclusive group chats"
+        "Discover ideal matches based on your Twitter data",
+        "Enjoy private match making on TEE",
+        "Pay for AI services with your data, not your privacy"
       ],
       buttonText: "CONNECT WALLET",
       icon: <Glasses className="w-6 h-6" />
     },
     {
       title: "CONNECT YOUR TWITTER",
-      subtitle: "Create a ZKTLs of your profile information and own your data",
+      subtitle: "Link your profile to unlock tailored networking opportunities.",
       progress: 25,
       bullets: [
-        "ZKTLs via Viayer ensures your data privacy",
-        "Storage on Akave grants you data ownership",
-        "Privacy-preserving compute via Phala keeps your data private while extracting your interests"
+        "Compute privately on your data to extract your Interests",
+        "Your data is yours to own, not big tech's",
+        "Free service? No, you pay with your data without revealing it."
       ],
       buttonText: "CONNECT 𝕏",
       icon: <Twitter className="w-6 h-6" />
     },
     {
       title: "MEET YOURSELF",
-      subtitle: "Review your extracted interests and mint SMM tokens proportional to your data's quality.",
+      subtitle: "Review your extracted interests and mint dataDAO tokens proportional to your data's quality & staking your $CRC.",
       progress: 50,
       dataScore: "SIGMA DATA CONFIDENCE SCORE= 2.3",
-      buttonText: "MINT SMM TOKENS",
+      buttonText: "Join dataDAO",
       icon: <Glasses className="w-6 h-6" />
     },
     {
       title: "FIND YOUR MATCHES",
-      subtitle: "Compute on dataDAO's pool of knowledge and find the magical connections",
+      subtitle: "Compute on dataDAO's data treasury and find the closest matches",
       progress: 75,
       bullets: [
-        "Pay in $MM tokens to access dataDAO's pool",
+        "Pay in your dataDAO's tokens to access dataDAO's pool",
         "See match scores indicating compatibility",
-        "Join private group chats exclusively for your matches to meetup"
+        "Direct message via Twitter to organize meeting up"
       ],
       buttonText: "MEET YOUR MATCHES",
       icon: <Globe2 className="w-6 h-6" />
     },
     {
       title: "CONNECT WITH YOUR MATCHES",
-      subtitle: "Connect with like-minded attendees and start collaborating.",
+      subtitle: "Connect with peers who share your passions.",
       progress: 100,
       matches: [
         { username: "@vitalik", matchScore: "80% interest match" },
@@ -169,7 +169,7 @@ export default function Onboarding() {
                     variant="link"
                     className="text-[#40e0d0] hover:text-[#40e0d0]/80 p-0 h-auto text-sm"
                   >
-                    Join group chat via XMTP
+                    DM on Twitter App
                   </Button>
                 </div>
               ))}
